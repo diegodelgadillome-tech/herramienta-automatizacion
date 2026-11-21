@@ -46,7 +46,6 @@ th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white
 th{background:var(--soft);font-weight:600}
 td.n,th.n{text-align:right}
 .aviso{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:12px 14px}
-footer{color:var(--muted);font-size:12px;margin-top:26px;text-align:center}
 .cliente .logo{display:flex;align-items:center;justify-content:center;height:76px;background:#fff;border-radius:8px;margin:0 0 10px;padding:8px}
 .cliente .logo img{max-height:58px;max-width:72%;display:block}
 nav.tabs{display:flex;gap:6px;margin-top:18px;border-bottom:1px solid var(--line)}
@@ -59,6 +58,39 @@ nav.tabs a[aria-current="page"]{color:var(--brand);border-bottom-color:var(--bra
 .form-marco{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
 .form-marco iframe{display:block;width:100%;height:2050px;border:0}
 .enlace{color:var(--brand);font-weight:600}
+button.secundario{background:var(--panel);color:var(--brand);border:2px solid var(--brand);border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
+button.secundario:disabled{opacity:.45;cursor:not-allowed}
+.informe-marco{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+.informe{width:760px;margin:0 auto;padding:28px 30px;background:#fff;color:#14213d;font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.informe .enc{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:3px solid #2f5597;padding-bottom:12px;margin-bottom:16px}
+.informe .enc h3{margin:0;font-size:22px}
+.informe .enc p{margin:2px 0 0;color:#5b6475;font-size:12px}
+.informe .enc img{max-height:52px;max-width:150px}
+.informe h4{font-size:14px;margin:18px 0 8px;color:#2f5597;text-transform:uppercase;letter-spacing:.03em}
+.informe .ikpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.informe .ikpi{background:#eef3fb;border-radius:8px;padding:8px 10px}
+.informe .ikpi b{display:block;font-size:17px}
+.informe .ikpi span{color:#5b6475;font-size:11px}
+.informe ul.hall{margin:0;padding-left:18px}
+.informe ul.hall li{margin:3px 0}
+.informe .barras{display:grid;grid-template-columns:150px 1fr 90px;gap:5px 10px;align-items:center;font-size:12px}
+.informe .barras .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.informe .barras .bar{height:14px;background:#e5eaf3;border-radius:4px;overflow:hidden}
+.informe .barras .bar i{display:block;height:100%;background:#2f5597;border-radius:4px}
+.informe .barras .val{text-align:right;font-variant-numeric:tabular-nums}
+.informe table{border-collapse:collapse;width:100%;font-size:11.5px}
+.informe th,.informe td{padding:5px 7px;border-bottom:1px solid #dde2ec;text-align:left;white-space:normal}
+.informe th{background:#eef3fb;font-weight:600}
+.informe td.n,.informe th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.informe .bloque{break-inside:avoid;page-break-inside:avoid}
+.informe.exportando{margin:0}
+.informe .pie{margin-top:18px;padding-top:8px;border-top:1px solid #dde2ec;color:#5b6475;font-size:10.5px}
+@media print{
+  body{background:#fff}
+  .wrap>header,#vista-herramienta>section:not(#armado),#vista-ayuda,#armado>h2,#armado>.acciones,#armado>ol,#armado .hint{display:none!important}
+  #armado{border:0;padding:0;margin:0}
+  .informe-marco{border:0;overflow:visible}
+}
 [hidden]{display:none!important}
 @media (max-width:720px){
   .clientes{grid-template-columns:1fr}
@@ -103,6 +135,18 @@ nav.tabs a[aria-current="page"]{color:var(--brand);border-bottom-color:var(--bra
     <div id="contenido"></div>
     <p class="hint" style="margin:14px 0 0">¿El reporte no se descargó o trae información incorrecta? <a class="enlace" href="#ayuda">Repórtalo en Ayuda</a>.</p>
   </section>
+
+  <section class="card" id="armado" hidden>
+    <h2 id="tituloArm">4. Reporte comercial</h2>
+    <ol class="pasos" id="pasosArm"></ol>
+    <div id="informeZona" hidden>
+      <div class="acciones" style="margin:0 0 14px">
+        <button class="primario" id="pdf" type="button">Descargar PDF</button>
+        <span class="hint" id="pdfHint">El PDF incluye todo el reporte que ves abajo.</span>
+      </div>
+      <div class="informe-marco"><div class="informe" id="informe"></div></div>
+    </div>
+  </section>
   </div>
 
   <div id="vista-ayuda" hidden>
@@ -121,8 +165,6 @@ nav.tabs a[aria-current="page"]{color:var(--brand);border-bottom-color:var(--bra
     </section>
   </div>
 
-  <footer>Demostración académica · Equipo 01 · Datos anonimizados: tiendas, proveedor y cifras modificados; sin costos ni márgenes.<br>
-  La herramienta no se conecta a los portales: entrega el último reporte guardado de cada cliente.</footer>
 </div>
 
 <script>
@@ -170,7 +212,7 @@ $('#obtener').addEventListener('click', async () => {
     'Validando columnas y totales…'
   ];
   const ol = $('#pasos'); ol.innerHTML = '';
-  $('#proceso').hidden = false; $('#resultado').hidden = true;
+  $('#proceso').hidden = false; $('#resultado').hidden = true; $('#armado').hidden = true;
   for (const p of pasos) {
     const li = document.createElement('li');
     li.innerHTML = '<span class="ico">…</span><span>' + esc(p) + '</span>';
@@ -182,7 +224,9 @@ $('#obtener').addEventListener('click', async () => {
   corriendo = false; $('#obtener').disabled = false;
 });
 
+let mostrado = null;
 function mostrar(id) {
+  mostrado = id;
   const d = DATOS[id];
   const c = $('#contenido');
   $('#resultado').hidden = false;
@@ -202,12 +246,229 @@ function mostrar(id) {
     '<div class="kpis">' + kpis.map(k => '<div class="kpi"><b>' + k[1] + '</b><span>' + k[0] + '</span></div>').join('') + '</div>' +
     '<p class="meta"><b>Archivo:</b> ' + esc(d.archivo) + ' · <b>Formato:</b> ' + esc(d.formato) + ' · <b>Periodo:</b> ' + esc(d.periodo) + '</p>' +
     '<div class="acciones" style="margin:0 0 14px"><a class="primario" href="' + encodeURIComponent(d.archivo) + '" download="' + esc(id + '_' + d.archivo) + '">Descargar reporte</a>' +
+    '<button class="secundario" id="armar" type="button">Armar reporte comercial</button>' +
     '<span class="hint">Vista previa de las primeras ' + d.muestra.length + ' filas</span></div>' +
     '<div class="tabla"><table><thead><tr>' + d.columnas.map((h, i) => '<th' + (numCols[i] ? ' class="n"' : '') + '>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' +
     d.muestra.map(r => '<tr>' + r.map((v, i) => '<td' + (numCols[i] ? ' class="n"' : '') + '>' + esc(v) + '</td>').join('') + '</tr>').join('') +
     '</tbody></table></div>';
   $('#resultado').scrollIntoView({behavior:'smooth', block:'start'});
 }
+
+// ---------- Automatización 2: armar el reporte comercial con la base descargada ----------
+const LIB_PDF = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+const MARCAS_SUBURBIA = {S858:'BRIGHT STARTS', T525:'BABY EINSTEIN', T526:'INGENUITY'};
+const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
+const MESES_C = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+let informeActual = null;
+
+const numero = v => { const s = String(v == null ? '' : v).replace(/,/g, '').trim(); const n = parseFloat(s); return isNaN(n) ? 0 : n; };
+const pct = (a, b) => b ? (100 * a / b).toFixed(1) + '%' : '0%';
+const mxn2 = n => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(n);
+
+function leerCSV(texto, sep) {
+  const filas = []; let fila = [], campo = '', comillas = false;
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i];
+    if (comillas) {
+      if (c === '"') { if (texto[i + 1] === '"') { campo += '"'; i++; } else comillas = false; }
+      else campo += c;
+    } else if (c === '"') comillas = true;
+    else if (c === sep) { fila.push(campo); campo = ''; }
+    else if (c === '\n') { fila.push(campo.replace(/\r$/, '')); filas.push(fila); fila = []; campo = ''; }
+    else campo += c;
+  }
+  if (campo !== '' || fila.length) { fila.push(campo.replace(/\r$/, '')); filas.push(fila); }
+  return filas.filter(f => f.length > 1);
+}
+
+async function leerBase(id) {
+  const d = DATOS[id];
+  const r = await fetch(encodeURIComponent(d.archivo), {cache: 'no-store'});
+  if (!r.ok) throw new Error('No se pudo leer ' + d.archivo);
+  const buf = await r.arrayBuffer();
+  if (id === 'sears') {
+    const xml = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(buf), 'application/xml');
+    return [...xml.documentElement.children].map(e => ({
+      tienda: 'Tienda ' + String(e.getAttribute('TIENDA') || '').trim().padStart(3, '0'),
+      clave: String(e.getAttribute('SKU') || '').trim(), articulo: String(e.getAttribute('DES_ART') || '').trim(),
+      marca: String(e.getAttribute('MARCA') || '').trim(),
+      piezas: numero(e.getAttribute('VTA_MES_Pzas')), venta: numero(e.getAttribute('VTA_MES_Impte'))
+    }));
+  }
+  if (id === 'suburbia') {
+    const f = leerCSV(new TextDecoder('windows-1252').decode(buf), ',');
+    const h = f[0], k = n => h.indexOf(n);
+    return f.slice(1).map(x => ({
+      fecha: x[k('FECHA_DIA')], tienda: x[k('PLANT_T')].replace('SUBURBIA ', '').replace('TIENDA', 'Tienda'),
+      clave: x[k('MATERIAL')].replace(/^0+/, ''), articulo: x[k('MATERIAL_T')].trim().replace(/\s+/g, ' '),
+      marca: MARCAS_SUBURBIA[x[k('MARCA')]] || x[k('MARCA')],
+      piezas: numero(x[k('VENTA_PZAS')]), venta: numero(x[k('VENTA_NETA_LC')])
+    }));
+  }
+  let t = new TextDecoder('utf-16le').decode(buf).replace(/^﻿/, '');
+  const f = leerCSV(t, '\t'); const h = f[0], k = n => h.indexOf(n);
+  return f.slice(1).map(x => ({
+    tienda: x[k('Centro')], clave: x[k('Clave Artículo')].replace(/^0+/, ''), articulo: x[k('Artículo')].trim(),
+    marca: x[k('Marca')].trim(), estatus: x[k('Estatus Artículo')],
+    piezas: numero(x[k('Venta Neta en UM')]), venta: numero(x[k('Venta Neta a Rtl')]),
+    inv: numero(x[k('Inventario Total en UM')]), invRtl: numero(x[k('Inventario Total a Rtl')]),
+    pend: numero(x[k('Pedidos de Venta Pendientes por Entregar Total en UM')])
+  }));
+}
+
+function agrupar(regs, clave, extra) {
+  const m = new Map();
+  for (const r of regs) {
+    const k = clave(r); if (!m.has(k)) m.set(k, {k, piezas: 0, venta: 0, inv: 0, n: 0, ...(extra ? extra(r) : {})});
+    const g = m.get(k); g.piezas += r.piezas; g.venta += r.venta; g.inv += r.inv || 0; g.n++;
+  }
+  return [...m.values()];
+}
+
+function calcular(id, regs) {
+  const venta = regs.reduce((s, r) => s + r.venta, 0), piezas = regs.reduce((s, r) => s + r.piezas, 0);
+  const conVenta = regs.filter(r => r.piezas > 0 || r.venta > 0);
+  const arts = agrupar(conVenta, r => r.clave, r => ({articulo: r.articulo, marca: r.marca})).sort((a, b) => b.venta - a.venta);
+  const tiendas = agrupar(conVenta, r => r.tienda).sort((a, b) => b.venta - a.venta);
+  const marcas = agrupar(conVenta, r => r.marca).sort((a, b) => b.venta - a.venta);
+  const res = {id, venta, piezas, precio: piezas ? venta / piezas : 0, arts, tiendas, marcas,
+    tiendasConVenta: tiendas.length, artsConVenta: arts.length, registros: regs.length};
+  if (id === 'suburbia') {
+    res.dias = agrupar(regs, r => r.fecha).sort((a, b) => a.k.localeCompare(b.k));
+  }
+  if (id === 'chedraui') {
+    res.inv = regs.reduce((s, r) => s + Math.max(r.inv, 0), 0);
+    res.invRtl = regs.reduce((s, r) => s + Math.max(r.invRtl, 0), 0);
+    res.pend = regs.reduce((s, r) => s + r.pend, 0);
+    res.ddi = piezas > 0 ? res.inv / (piezas / 31) : 0;
+    const sinVenta = regs.filter(r => r.inv > 0 && r.piezas <= 0);
+    res.sinVentaN = sinVenta.length; res.sinVentaPzas = sinVenta.reduce((s, r) => s + r.inv, 0);
+    res.sinVentaArts = agrupar(sinVenta, r => r.clave, r => ({articulo: r.articulo, marca: r.marca})).sort((a, b) => b.inv - a.inv);
+    res.invTiendas = agrupar(regs.filter(r => r.inv > 0 || r.piezas > 0), r => r.tienda).map(g => ({...g, ddi: g.piezas > 0 ? g.inv / (g.piezas / 31) : null})).sort((a, b) => b.inv - a.inv);
+  }
+  return res;
+}
+
+function etiquetaDia(f) {
+  const d = new Date(+f.slice(0, 4), +f.slice(4, 6) - 1, +f.slice(6, 8));
+  return DIAS[d.getDay()] + ' ' + d.getDate() + ' ' + MESES_C[d.getMonth()];
+}
+
+function barras(lista, etiqueta, valor, formato) {
+  const max = Math.max(...lista.map(valor), 1);
+  return '<div class="barras">' + lista.map(x =>
+    '<span class="lab" title="' + esc(etiqueta(x)) + '">' + esc(etiqueta(x)) + '</span>' +
+    '<span class="bar"><i style="width:' + Math.max(1, 100 * valor(x) / max).toFixed(1) + '%"></i></span>' +
+    '<span class="val">' + formato(valor(x)) + '</span>').join('') + '</div>';
+}
+
+function tabla(cols, filas) {
+  return '<table><thead><tr>' + cols.map(c => '<th' + (c.n ? ' class="n"' : '') + '>' + c.t + '</th>').join('') + '</tr></thead><tbody>' +
+    filas.map(f => '<tr>' + cols.map(c => '<td' + (c.n ? ' class="n"' : '') + '>' + c.v(f) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+}
+
+function htmlInforme(id, R) {
+  const d = DATOS[id], ahora = new Date();
+  const logo = document.querySelector('.cliente[data-id="' + id + '"] img');
+  const top10 = R.arts.slice(0, 10), top10v = top10.reduce((s, a) => s + a.venta, 0);
+  const marcaLider = R.marcas[0], tiendaLider = R.tiendas[0];
+  const top5t = R.tiendas.slice(0, 5).reduce((s, t) => s + t.venta, 0);
+  const hall = [
+    'La venta del periodo fue de <b>' + mxn2(R.venta) + '</b> con <b>' + fmt(Math.round(R.piezas)) + ' piezas</b>, a un precio promedio de ' + mxn2(R.precio) + ' por pieza.',
+    'La marca líder es <b>' + esc(marcaLider.k) + '</b>, con ' + pct(marcaLider.venta, R.venta) + ' de la venta.',
+    'Los 10 artículos más vendidos concentran <b>' + pct(top10v, R.venta) + '</b> de la venta; el primero es «' + esc(top10[0].articulo) + '».',
+    'Vendieron ' + R.tiendasConVenta + ' tiendas; las 5 principales suman ' + pct(top5t, R.venta) + ' y la líder es ' + esc(tiendaLider.k) + '.'
+  ];
+  if (id === 'suburbia') {
+    const mejor = [...R.dias].sort((a, b) => b.venta - a.venta)[0];
+    hall.push('El mejor día fue el <b>' + etiquetaDia(mejor.k) + '</b>, con ' + mxn2(mejor.venta) + ' (' + pct(mejor.venta, R.venta) + ' de la semana).');
+  }
+  if (id === 'chedraui') {
+    hall.push('El inventario en tiendas es de <b>' + fmt(Math.round(R.inv)) + ' piezas</b>, equivalente a <b>' + Math.round(R.ddi) + ' días</b> de venta al ritmo del mes.');
+    hall.push('Hay <b>' + fmt(R.sinVentaN) + '</b> combinaciones tienda-artículo con inventario y sin venta en el mes (' + fmt(Math.round(R.sinVentaPzas)) + ' piezas): son candidatas a exhibición o traspaso.');
+  }
+  const kpis = [['Venta', mxn2(R.venta)], ['Piezas vendidas', fmt(Math.round(R.piezas))], ['Precio promedio', mxn2(R.precio)], ['Tiendas con venta', fmt(R.tiendasConVenta)]];
+  if (id === 'chedraui') kpis.push(['Inventario (piezas)', fmt(Math.round(R.inv))], ['Días de inventario', fmt(Math.round(R.ddi))], ['Pedidos pendientes', fmt(Math.round(R.pend))], ['Artículos con venta', fmt(R.artsConVenta)]);
+  else kpis.push(['Artículos con venta', fmt(R.artsConVenta)], ['Registros analizados', fmt(R.registros)], ['Marcas', fmt(R.marcas.length)], ['Venta por tienda', mxn2(R.venta / Math.max(R.tiendasConVenta, 1))]);
+
+  let h = '<div class="enc"><div><h3>Reporte comercial · ' + NOMBRES[id] + '</h3>' +
+    '<p>Periodo: ' + esc(d.periodo) + '</p><p>Fuente: ' + esc(d.archivo) + ' (' + esc(d.formato) + ')</p>' +
+    '<p>Generado el ' + ahora.toLocaleDateString('es-MX', {day:'numeric', month:'long', year:'numeric'}) + ' a las ' + ahora.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}) + ' · Herramienta de automatización KAM</p></div>' +
+    (logo ? '<img src="' + logo.src + '" alt="' + NOMBRES[id] + '">' : '') + '</div>';
+  h += '<div class="bloque"><h4>Indicadores</h4><div class="ikpis">' + kpis.map(k => '<div class="ikpi"><b>' + k[1] + '</b><span>' + k[0] + '</span></div>').join('') + '</div></div>';
+  h += '<div class="bloque"><h4>Hallazgos</h4><ul class="hall">' + hall.map(x => '<li>' + x + '</li>').join('') + '</ul></div>';
+  h += '<div class="bloque"><h4>Venta por marca</h4>' + barras(R.marcas, m => m.k + ' · ' + pct(m.venta, R.venta), m => m.venta, mxn2) + '</div>';
+  if (id === 'suburbia') h += '<div class="bloque"><h4>Venta por día</h4>' + barras(R.dias, x => etiquetaDia(x.k), x => x.venta, mxn2) + '</div>';
+  h += '<div class="bloque"><h4>Top 10 artículos por venta</h4>' + tabla([
+    {t: '#', v: (f) => R.arts.indexOf(f) + 1}, {t: 'Artículo', v: f => esc(f.articulo)}, {t: 'Marca', v: f => esc(f.marca)},
+    {t: 'Piezas', n: 1, v: f => fmt(Math.round(f.piezas))}, {t: 'Venta', n: 1, v: f => mxn2(f.venta)}, {t: '% venta', n: 1, v: f => pct(f.venta, R.venta)}], top10) + '</div>';
+  h += '<div class="bloque"><h4>Top 10 tiendas por venta</h4>' + barras(R.tiendas.slice(0, 10), t => t.k, t => t.venta, mxn2) + '</div>';
+  if (id === 'chedraui') {
+    h += '<div class="bloque"><h4>Inventario y días de inventario · 10 tiendas con más inventario</h4>' + tabla([
+      {t: 'Tienda', v: f => esc(f.k)}, {t: 'Inventario (pzas)', n: 1, v: f => fmt(Math.round(f.inv))}, {t: 'Venta del mes (pzas)', n: 1, v: f => fmt(Math.round(f.piezas))},
+      {t: 'Días de inventario', n: 1, v: f => f.ddi == null ? 'Sin venta' : fmt(Math.round(f.ddi))}], R.invTiendas.slice(0, 10)) + '</div>';
+    h += '<div class="bloque"><h4>Artículos con inventario y sin venta · top 10 por piezas</h4>' + tabla([
+      {t: 'Artículo', v: f => esc(f.articulo)}, {t: 'Marca', v: f => esc(f.marca)}, {t: 'Tiendas', n: 1, v: f => fmt(f.n)}, {t: 'Inventario (pzas)', n: 1, v: f => fmt(Math.round(f.inv))}], R.sinVentaArts.slice(0, 10)) + '</div>';
+  }
+  const pie = '<div class="pie">Reporte generado automáticamente por la herramienta a partir de la base descargada del portal de ' + NOMBRES[id] + '. Montos en pesos mexicanos.</div>';
+  const i = h.lastIndexOf('</div>');
+  return h.slice(0, i) + pie + h.slice(i);
+}
+
+document.addEventListener('click', async ev => {
+  if (!ev.target || ev.target.id !== 'armar' || corriendo) return;
+  const id = mostrado; if (!id || !DATOS[id]) return;
+  corriendo = true; ev.target.disabled = true; $('#obtener').disabled = true;
+  const sec = $('#armado'), ol = $('#pasosArm');
+  sec.hidden = false; $('#informeZona').hidden = true; ol.innerHTML = '';
+  $('#tituloArm').textContent = '4. Reporte comercial · ' + NOMBRES[id];
+  sec.scrollIntoView({behavior: 'smooth', block: 'start'});
+  const paso = async (txt, fn) => {
+    const li = document.createElement('li'); li.innerHTML = '<span class="ico">…</span><span>' + esc(txt) + '</span>'; ol.appendChild(li);
+    const [r] = await Promise.all([fn ? fn() : null, espera(450)]);
+    li.classList.add('hecho'); li.querySelector('.ico').textContent = '✓'; return r;
+  };
+  try {
+    const regs = await paso('Leyendo la base descargada (' + DATOS[id].archivo + ')…', () => leerBase(id));
+    const R = await paso('Calculando indicadores de ' + fmt(regs.length) + ' registros…', () => calcular(id, regs));
+    await paso('Armando gráficas, rankings y hallazgos…', () => { $('#informe').innerHTML = htmlInforme(id, R); });
+    informeActual = id;
+    $('#informeZona').hidden = false;
+  } catch (e) {
+    ol.insertAdjacentHTML('beforeend', '<li><span class="ico">✗</span><span>' + esc(e.message) + '</span></li>');
+  }
+  corriendo = false; ev.target.disabled = false; $('#obtener').disabled = false;
+});
+
+function cargarLibPDF() {
+  if (window.html2pdf) return Promise.resolve();
+  return new Promise((ok, mal) => { const s = document.createElement('script'); s.src = LIB_PDF; s.onload = ok; s.onerror = mal; document.head.appendChild(s); });
+}
+
+$('#pdf').addEventListener('click', async () => {
+  if (!informeActual) return;
+  const b = $('#pdf'); b.disabled = true; $('#pdfHint').textContent = 'Generando PDF…';
+  const nombre = 'Reporte_comercial_' + NOMBRES[informeActual] + '_' + DATOS[informeActual].archivo.replace(/\.[^.]+$/, '') + '.pdf';
+  try {
+    await cargarLibPDF();
+    const yAntes = window.scrollY;
+    window.scrollTo(0, 0);
+    const inf = $('#informe'); inf.classList.add('exportando');
+    await html2pdf().set({
+      margin: [8, 8, 10, 8], filename: nombre, image: {type: 'jpeg', quality: 0.95},
+      html2canvas: {scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollX: 0, scrollY: 0},
+      jsPDF: {unit: 'mm', format: 'letter', orientation: 'portrait'},
+      pagebreak: {mode: ['css', 'legacy'], avoid: '.bloque'}
+    }).from(inf).save();
+    inf.classList.remove('exportando');
+    window.scrollTo(0, yAntes);
+    $('#pdfHint').textContent = 'Listo: se descargó ' + nombre;
+  } catch (e) {
+    $('#pdfHint').textContent = 'Usa «Guardar como PDF» en la ventana de impresión.';
+    window.print();
+  }
+  b.disabled = false;
+});
 </script>
 </body>
 </html>
