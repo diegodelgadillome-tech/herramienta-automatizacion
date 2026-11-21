@@ -9,3 +9,6 @@ La página simula la descarga de reportes comerciales desde los portales de prov
 y se quitaron costos, márgenes y utilidades. Ningún archivo contiene información real de ventas.
 
 Cómo usarla: abre la página, elige un cliente y pulsa **Obtener reporte**.
+
+**Ayuda:** la pestaña «Ayuda» incluye el formulario del proyecto para reportar incidencias. Cada respuesta llega al
+Control de Solicitudes (Google Sheets), avisa por correo al equipo y se registra en Baserow mediante Apps Script.
