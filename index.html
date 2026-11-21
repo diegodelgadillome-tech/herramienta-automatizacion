@@ -48,15 +48,9 @@ td.n,th.n{text-align:right}
 .aviso{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:12px 14px}
 .cliente .logo{display:flex;align-items:center;justify-content:center;height:76px;background:#fff;border-radius:8px;margin:0 0 10px;padding:8px}
 .cliente .logo img{max-height:58px;max-width:72%;display:block}
-nav.tabs{display:flex;gap:6px;margin-top:18px;border-bottom:1px solid var(--line)}
-nav.tabs a{padding:10px 14px;color:var(--muted);text-decoration:none;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-1px}
-nav.tabs a:hover{color:var(--ink)}
-nav.tabs a[aria-current="page"]{color:var(--brand);border-bottom-color:var(--brand)}
 .ayuda-intro{margin:0 0 10px}
-.ayuda-pasos{margin:0 0 14px;padding-left:20px;color:var(--muted)}
-.ayuda-pasos li{margin:3px 0}
 .form-marco{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
-.form-marco iframe{display:block;width:100%;height:2050px;border:0}
+.form-marco iframe{display:block;width:100%;height:2900px;border:0}
 .enlace{color:var(--brand);font-weight:600}
 .salidas{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .salida{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;background:var(--panel)}
@@ -95,7 +89,7 @@ button.secundario:disabled{opacity:.45;cursor:not-allowed}
 .informe .pie{margin-top:18px;padding-top:8px;border-top:1px solid #dde2ec;color:#5b6475;font-size:10.5px}
 @media print{
   body{background:#fff}
-  .wrap>header,#vista-herramienta>section:not(#resultado),#vista-ayuda,#resultado>h2,#resultado>.acciones,#resultado .hint,#resBase{display:none!important}
+  .wrap>header,#vista-herramienta>section:not(#resultado),#resultado>h2,#resultado>.acciones,#resultado .hint,#resBase{display:none!important}
   #resultado{border:0;padding:0;margin:0}
   .informe-marco{border:0;overflow:visible}
 }
@@ -112,10 +106,6 @@ button.secundario:disabled{opacity:.45;cursor:not-allowed}
   <header>
     <h1>Herramienta de automatización</h1>
     <p>KAM · Descarga de reportes comerciales de los portales de clientes</p>
-    <nav class="tabs" aria-label="Secciones">
-      <a href="#herramienta" data-vista="herramienta" aria-current="page">Herramienta</a>
-      <a href="#ayuda" data-vista="ayuda">Ayuda</a>
-    </nav>
   </header>
 
   <div id="vista-herramienta">
@@ -153,24 +143,16 @@ button.secundario:disabled{opacity:.45;cursor:not-allowed}
     <p class="hint" id="estadoDesc" style="margin:0 0 16px"></p>
     <div id="resBase"></div>
     <div id="informeZona" hidden><div class="informe-marco"><div class="informe" id="informe"></div></div></div>
-    <p class="hint" style="margin:14px 0 0">¿Algo no se descargó o trae información incorrecta? <a class="enlace" href="#ayuda">Repórtalo en Ayuda</a>.</p>
   </section>
-  </div>
 
-  <div id="vista-ayuda" hidden>
-    <section class="card">
-      <h2>Ayuda · Reporta una incidencia</h2>
-      <p class="ayuda-intro">Si un reporte no se pudo descargar, llegó con información incorrecta o necesitas apoyo con la herramienta, registra tu solicitud aquí. El equipo KAM recibe el aviso por correo y la solicitud queda en el Control de Solicitudes.</p>
-      <ol class="ayuda-pasos">
-        <li>Escribe el folio de tu solicitud y elige el portal del cliente.</li>
-        <li>Indica el periodo, el tipo de reporte y la fecha límite.</li>
-        <li>Marca el estado del reporte y, si hubo un problema, el tipo de error.</li>
-      </ol>
-      <div class="form-marco">
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSewQ_T2atAYq0T_WxugyMgQpHSOzwd5mKa0MJjOEEV4pYKZxQ/viewform?embedded=true" title="Formulario de ayuda KAM" loading="lazy">Cargando…</iframe>
-      </div>
-      <p class="hint" style="margin:12px 0 0">¿No se ve el formulario? <a class="enlace" href="https://docs.google.com/forms/d/e/1FAIpQLSewQ_T2atAYq0T_WxugyMgQpHSOzwd5mKa0MJjOEEV4pYKZxQ/viewform" target="_blank" rel="noopener">Ábrelo en una pestaña nueva</a>.</p>
-    </section>
+  <section class="card" id="encuesta" hidden>
+    <h2>5. Califica el servicio</h2>
+    <p class="ayuda-intro">Tu folio de descarga es <b id="folioTxt"></b>. Los datos de la descarga ya vienen llenos: solo dinos si el portal funcionó, cómo terminó la descarga y cómo calificas el servicio. Si algo falló, el equipo recibe un aviso por correo y un técnico lo atiende.</p>
+    <div class="form-marco">
+      <iframe id="encuestaFrame" title="Encuesta de servicio KAM">Cargando…</iframe>
+    </div>
+    <p class="hint" style="margin:12px 0 0">¿No se ve la encuesta? <a class="enlace" id="encuestaLink" href="#" target="_blank" rel="noopener">Ábrela en una pestaña nueva</a>.</p>
+  </section>
   </div>
 
 </div>
@@ -203,17 +185,6 @@ document.querySelectorAll('.cliente').forEach(b => b.addEventListener('click', (
 }));
 document.querySelectorAll('input[name=salida]').forEach(r => r.addEventListener('change', () => { salida = r.value; actualizarBoton(); }));
 
-function mostrarVista() {
-  const v = location.hash === '#ayuda' ? 'ayuda' : 'herramienta';
-  $('#vista-herramienta').hidden = v !== 'herramienta';
-  $('#vista-ayuda').hidden = v !== 'ayuda';
-  document.querySelectorAll('nav.tabs a').forEach(a => {
-    if (a.dataset.vista === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
-  });
-  if (location.hash === '#ayuda' || location.hash === '#herramienta') window.scrollTo(0, 0);
-}
-window.addEventListener('hashchange', mostrarVista);
-mostrarVista();
 
 const espera = ms => new Promise(r => setTimeout(r, ms));
 
@@ -435,6 +406,30 @@ function htmlBase(id) {
 
 let ultimo = null;   // {id, salida, buf}
 
+// ---------- Encuesta de servicio (formulario de Google prellenado) ----------
+const ENCUESTA = 'https://docs.google.com/forms/d/e/1FAIpQLSewQ_T2atAYq0T_WxugyMgQpHSOzwd5mKa0MJjOEEV4pYKZxQ/viewform';
+const CAMPOS = {folio: 'entry.238387292', portal: 'entry.1032487262', periodo: 'entry.1356241577', tipo: 'entry.864500672',
+  que: 'entry.494207577', descarga: 'entry.1071426436', limite: 'entry.2130070301', funciono: 'entry.962657767', estado: 'entry.1237943664'};
+const PORTAL_FORM = {suburbia: 'Suburbia Business', sears: 'Sears', chedraui: 'Chedraui'};
+const PERIODO_FORM = {suburbia: '2026-11-09', sears: '2026-10-01', chedraui: '2026-10-01'};
+const QUE_FORM = {base: 'Base de datos', reporte: 'Reporte comercial', ambos: 'Ambos'};
+const isoLocal = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const nuevoFolio = () => String(Date.now()).slice(-7).replace(/^0+/, '') || '1';
+
+function abrirEncuesta(id, modo, folio, fallo) {
+  const hoy = new Date(), limite = new Date(hoy.getTime() + 3 * 86400000);
+  const p = new URLSearchParams({usp: 'pp_url'});
+  p.set(CAMPOS.folio, folio); p.set(CAMPOS.portal, PORTAL_FORM[id]); p.set(CAMPOS.periodo, PERIODO_FORM[id]);
+  p.set(CAMPOS.tipo, 'Sell Out'); p.set(CAMPOS.que, QUE_FORM[modo]);
+  p.set(CAMPOS.descarga, isoLocal(hoy)); p.set(CAMPOS.limite, isoLocal(limite));
+  if (fallo) { p.set(CAMPOS.estado, 'Error'); }
+  $('#encuestaFrame').src = ENCUESTA + '?embedded=true&' + p.toString();
+  $('#encuestaLink').href = ENCUESTA + '?' + p.toString();
+  $('#folioTxt').textContent = folio;
+  $('#encuesta').hidden = false;
+}
+
+
 $('#ejecutar').addEventListener('click', async () => {
   if (!elegido || !salida || corriendo) return;
   const id = elegido, modo = salida, d = DATOS[id];
@@ -442,7 +437,7 @@ $('#ejecutar').addEventListener('click', async () => {
   corriendo = true; actualizarBoton();
   const ol = $('#pasos'); ol.innerHTML = '';
   $('#proceso').hidden = false; $('#resultado').hidden = true;
-  $('#informeZona').hidden = true; $('#resBase').innerHTML = ''; $('#descargas').innerHTML = ''; $('#estadoDesc').textContent = '';
+  $('#encuesta').hidden = true; $('#informeZona').hidden = true; $('#resBase').innerHTML = ''; $('#descargas').innerHTML = ''; $('#estadoDesc').textContent = '';
   $('#proceso').scrollIntoView({behavior: 'smooth', block: 'start'});
   if (quiereRep) cargarLibPDF().catch(() => {});
   const paso = async (txt, fn, ms) => {
@@ -453,13 +448,14 @@ $('#ejecutar').addEventListener('click', async () => {
     } catch (e) { li.querySelector('.ico').textContent = '✗'; throw e; }
   };
   const hechos = [];
+  const folio = nuevoFolio();
   try {
     await paso('Conectando con el ' + PORTALES[id] + '…');
     await paso('Buscando el reporte más reciente…');
     const buf = await paso('Descargando la base de datos (' + d.archivo + ')…', () => bajarArchivo(id));
     const regs = await paso('Validando columnas y totales…', () => leerBase(id, buf));
     ultimo = {id, modo, buf};
-    $('#tituloRes').textContent = '4. Resultado · ' + NOMBRES[id];
+    $('#tituloRes').textContent = '4. Resultado · ' + NOMBRES[id] + ' · Folio ' + folio;
     if (quiereRep) {
       const R = await paso('Calculando indicadores de ' + fmt(regs.length) + ' registros…', () => calcular(id, regs));
       await paso('Armando gráficas, rankings y hallazgos…', () => { $('#informe').innerHTML = htmlInforme(id, R); });
@@ -483,10 +479,12 @@ $('#ejecutar').addEventListener('click', async () => {
     if (quiereBase) botones.push('<button class="primario" type="button" data-bajar="base">Descargar base de datos</button>');
     if (quiereRep) botones.push('<button class="' + (quiereBase ? 'secundario' : 'primario') + '" type="button" data-bajar="pdf">Descargar reporte PDF</button>');
     $('#descargas').innerHTML = botones.join('');
-    if (hechos.length) $('#estadoDesc').textContent = 'Listo. Se descargó a tu carpeta de Descargas: ' + hechos.join(' y ') + '. Si tu navegador pidió permiso para descargar varios archivos, acéptalo o usa los botones.';
+    if (hechos.length) $('#estadoDesc').textContent = 'Listo. Se descargó a tu carpeta de Descargas: ' + hechos.join(' y ') + '. Si tu navegador pidió permiso para descargar varios archivos, acéptalo o usa los botones. Al final de la página está la encuesta para calificar el servicio.';
+    abrirEncuesta(id, modo, folio, false);
     $('#resultado').scrollIntoView({behavior: 'smooth', block: 'start'});
   } catch (e) {
-    ol.insertAdjacentHTML('beforeend', '<li><span class="ico">✗</span><span>' + esc(e.message) + '. Inténtalo de nuevo o repórtalo en Ayuda.</span></li>');
+    ol.insertAdjacentHTML('beforeend', '<li><span class="ico">✗</span><span>' + esc(e.message) + '. Inténtalo de nuevo o repórtalo en la encuesta de abajo.</span></li>');
+    abrirEncuesta(id, modo, folio, true);
   }
   corriendo = false; actualizarBoton();
 });
