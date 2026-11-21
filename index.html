@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herramienta de automatización · KAM</title>
+<meta name="description" content="Demostración académica: obtiene reportes comerciales guardados por cliente.">
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --ink:#14213d; --muted:#5b6475; --line:#dde2ec;
+  --brand:#2f5597; --brand-ink:#ffffff; --soft:#e7effb; --ok:#1e7b34; --warn:#9a6700; --warn-bg:#fff6dd;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1420; --panel:#171e2d; --ink:#e8edf6; --muted:#9aa5ba; --line:#2a3447;
+         --brand:#6f9be8; --brand-ink:#0f1420; --soft:#1f2b42; --ok:#5cc37a; --warn:#f1c35b; --warn-bg:#2b2412; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:28px 16px 40px}
+header h1{margin:0;font-size:30px;letter-spacing:-.01em}
+header p{margin:4px 0 0;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:20px}
+h2{font-size:17px;margin:0 0 12px}
+.clientes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cliente{border:2px solid var(--line);border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;background:var(--panel);color:var(--ink);font:inherit;font-weight:600;font-size:16px;transition:border-color .15s, background .15s}
+.cliente small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:4px}
+.cliente:hover{border-color:var(--brand)}
+.cliente[aria-pressed="true"]{border-color:var(--brand);background:var(--soft)}
+.acciones{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
+button.primario,a.primario{background:var(--brand);color:var(--brand-ink);border:0;border-radius:10px;padding:12px 20px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+button.primario:disabled{opacity:.45;cursor:not-allowed}
+.hint{color:var(--muted);font-size:13px}
+ol.pasos{list-style:none;margin:0;padding:0}
+ol.pasos li{padding:6px 0;color:var(--muted);display:flex;gap:10px;align-items:center}
+ol.pasos li.hecho{color:var(--ink)}
+ol.pasos li .ico{width:18px;text-align:center}
+ol.pasos li.hecho .ico{color:var(--ok)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:4px 0 14px}
+.kpi{background:var(--soft);border-radius:10px;padding:10px 12px}
+.kpi b{display:block;font-size:20px}
+.kpi span{color:var(--muted);font-size:12px}
+.meta{color:var(--muted);font-size:13px;margin:0 0 12px}
+.tabla{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{background:var(--soft);font-weight:600}
+td.n,th.n{text-align:right}
+.aviso{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:12px 14px}
+footer{color:var(--muted);font-size:12px;margin-top:26px;text-align:center}
+[hidden]{display:none!important}
+@media (max-width:720px){
+  .clientes{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  header h1{font-size:24px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Herramienta de automatización</h1>
+    <p>KAM · Descarga de reportes comerciales de los portales de clientes</p>
+  </header>
+
+  <section class="card">
+    <h2>1. Selecciona el cliente</h2>
+    <div class="clientes" role="group" aria-label="Cliente">
+      <button class="cliente" data-id="suburbia" aria-pressed="false">Suburbia<small>Venta diaria</small></button>
+      <button class="cliente" data-id="sears" aria-pressed="false">Sears<small>Venta del mes</small></button>
+      <button class="cliente" data-id="chedraui" aria-pressed="false">Chedraui<small>Venta e inventario</small></button>
+    </div>
+    <div class="acciones">
+      <button class="primario" id="obtener" disabled>Obtener reporte</button>
+      <span class="hint" id="hint">Elige un cliente para continuar.</span>
+    </div>
+  </section>
+
+  <section class="card" id="proceso" hidden>
+    <h2>2. Proceso</h2>
+    <ol class="pasos" id="pasos"></ol>
+  </section>
+
+  <section class="card" id="resultado" hidden>
+    <h2 id="tituloRes">3. Reporte listo</h2>
+    <div id="contenido"></div>
+  </section>
+
+  <footer>Demostración académica · Equipo 01 · Datos anonimizados: tiendas, proveedor y cifras modificados; sin costos ni márgenes.<br>
+  La herramienta no se conecta a los portales: entrega el último reporte guardado de cada cliente.</footer>
+</div>
+
+<script>
+const DATOS = {"suburbia": {"archivo": "P00900001_VTA_16112026.csv", "formato": "CSV (separado por comas)", "periodo": "9 al 15 de noviembre de 2026 (venta diaria)", "registros": 919, "tiendas": 160, "articulos": 72, "piezas": 1008, "venta": 275037.63, "columnas": ["FECHA_DIA", "PLANT_T", "MATERIAL_T", "MARCA", "EAN", "VENTA_PZAS", "VENTA_NETA_LC"], "muestra": [["20261113", "SUBURBIA TIENDA 001", "BOUNCER BRIGHT STARTS OBAL  MULTICOLOR", "S858", "2020015484082", "2", "1036.2"], ["20261112", "SUBURBIA TIENDA 001", "JUGUETE BRIGHT STARTS ERIZO DIDACTICO", "S858", "2020008505602", "1", "246.99"], ["20261115", "SUBURBIA TIENDA 001", "JUGUETE BABYEINSTEIN MNATA  MULTICOLOR", "T525", "74451126282", "1", "216.11"], ["20261113", "SUBURBIA TIENDA 001", "JUGUETE BRIGHT STARTS POOH  MULTICOLOR", "S858", "74451174085", "1", "105.73"], ["20261114", "SUBURBIA TIENDA 001", "JUGUETE BRIGHT STARTS WATE  MULTICOLORS", "S858", "74451174443", "1", "195.17"], ["20261114", "SUBURBIA TIENDA 001", "JUGUETE BABYEINSTEIN  MULTICOLOR", "T525", "74451174139", "1", "995.28"], ["20261114", "SUBURBIA TIENDA 001", "JUGUETE BRIGHT STARTS 5 EN 1 CON  ROSAA", "S858", "74451126251", "2", "1156.45"], ["20261112", "SUBURBIA TIENDA 001", "MORDEDERA BRIGHT STARTS GIRAFA", "S858", "2020008506067", "2", "305.35"], ["20261115", "SUBURBIA TIENDA 002", "BOUNCER BRIGHT STARTS  GRIS", "S858", "74451171909", "1", "955.63"], ["20261115", "SUBURBIA TIENDA 002", "ENTRENADOR INGENUITY", "T526", "12914117200", "1", "531.26"], ["20261111", "SUBURBIA TIENDA 002", "ENTRENADOR INGENUITY", "T526", "12914117200", "2", "1464.64"], ["20261112", "SUBURBIA TIENDA 002", "ENTRENADOR INGENUITY", "T526", "12914117200", "1", "769.84"], ["20261110", "SUBURBIA TIENDA 002", "ENTRENADOR BABYEINSTEIN", "T525", "74451172852", "1", "302.6"], ["20261109", "SUBURBIA TIENDA 002", "TINA INGENUITY  GRIS OXFORD", "T526", "12914197875", "0", ""], ["20261115", "SUBURBIA TIENDA 002", "TINA INGENUITY  GRIS OXFORD", "T526", "12914197875", "0", ""]]}, "sears": {"archivo": "POS_OCTUBRE_2026.xml", "formato": "XML", "periodo": "Octubre 2026 (venta del mes)", "registros": 1632, "tiendas": 93, "articulos": 100, "piezas": 2727, "venta": 909991.85, "columnas": ["TIENDA", "DES_ART", "MARCA", "EAN", "VENTA_UNI", "VTA_MES_Pzas", "VTA_MES_Impte"], "muestra": [["1", "GIMNASIO MUSICAL KICKIN TUNES VERDE BABY EINSTEIN", "BABY EINSTEIN", "74451174474", "1999.00", "1.00", "1490.08"], ["1", "BAÐO ENTRENADOR CON SONIDO ROSA INGENUITY 17137-00", "INGENUITY", "12914171370", "879.00", "2.00", "1212.80"], ["1", "TAPETE DE AGUA PECES ROSA BABY EINSTEIN 17558-000", "BABY EINSTEIN", "74451175587", "419.00", "3.00", "837.61"], ["1", "JUGUETE RELAJANTE PECERA SOOTHER BABY EINSTEIN 174", "BABY EINSTEIN", "74451174269", "819.00", "1.00", "590.12"], ["1", "CANGREJO BAILAR-N ROSA BRIGHT STARTS 17635-013", "BRIGHT STARTS", "74451998285", "599.00", "1.00", "547.44"], ["1", "TAPETE DE AGUA GRANJA ROJO BABY EINSTEIN 17559-000", "BABY EINSTEIN", "74451175594", "419.00", "1.00", "251.72"], ["1", "LIBRO SUAVE CON MORDEDERA DE GRANJA BABY EINSTEIN", "BABY EINSTEIN", "74451176140", "199.00", "1.00", "167.87"], ["1", "GIMNASIO PLEGABLE C PELOTAS BRIGHT STARTS 17560-00", "BRIGHT STARTS", "74451175600", "1169.00", "1.00", "995.69"], ["1", "GIMNASIO WILD WIGGLE BRIGHT STARTS 16814", "BRIGHT STARTS", "74451168145", "1229.00", "1.00", "792.35"], ["1", "BOUNCER FLAMINGO BIRGHT STARTS 12228", "BRIGHT STARTS", "74451122055", "1299.00", "1.00", "812.75"], ["1", "BOUNCER TUCAN BRIGHT STARTS 12227", "BRIGHT STARTS", "74451122284", "1299.00", "1.00", "1121.94"], ["1", "SONAJA DE MANCUERNA BRIGHT STARTS 8672", "BRIGHT STARTS", "74451086722", "99.00", "1.00", "90.65"], ["1", "MORDEDERA ORUGA BABY EINSTEIN  10573", "BABY EINSTEIN", "74451105737", "179.00", "1.00", "166.59"], ["1", "SONAJA VERDE BRIGHT STARTS 8188", "BRIGHT STARTS", "74451081888", "89.00", "1.00", "70.67"], ["2", "GIMNASIO WILD WIGGLE BRIGHT STARTS 16814", "BRIGHT STARTS", "74451168145", "1229.00", "1.00", "814.07"]]}, "chedraui": {"archivo": "POS_OCTUBRE_2026.csv", "formato": "CSV (separado por tabuladores, UTF-16)", "periodo": "Octubre 2026 (venta e inventario del mes)", "registros": 1676, "tiendas": 24, "articulos": 103, "piezas": 1581, "venta": 989914.0, "inventario": 5144, "columnas": ["Centro", "Artículo", "Marca", "Estatus Artículo", "Inventario Total en UM", "Venta Neta en UM", "Venta Neta a Rtl"], "muestra": [["Tienda 001", "PELUCHE RELAJANTE OPUSS LOOK SEA", "BABY EINSTEIN", "Activo", "-1.00", "2", "379"], ["Tienda 001", "ING CONVERTME SWING 2 SEAT", "INGENUITY", "Activo", "1.00", "1", "3,049"], ["Tienda 001", "PRO POSIT 7 IN 1 DLX HIGHCHAIR CHAM", "INGENUITY", "Activo", "1.00", "1", "3,474"], ["Tienda 001", "BARRA DE JUGUETES GLOW AND DISCOVER", "BABY EINSTEIN", "Activo", "2.00", "2", "842"], ["Tienda 001", "ASIENTO DE PISO PORTATIL PARA BEBE SPOT", "INGENUITY", "Activo", "3.00", "3", "1,617"], ["Tienda 001", "ROCKER MECEDORA 3 EN 1 PARA BEBE", "INGENUITY", "Activo", "1.00", "1", "2,177"], ["Tienda 001", "CANGREJO BAILARIN MUSICAL ROJO", "BRIGHT STARTS", "Activo", "3.00", "1", "419"], ["Tienda 001", "CONEJO SILVY MANTA PELUCHE CON MORDEDERA", "INGENUITY", "Activo", "3.00", "6", "1349"], ["Tienda 001", "STACKING TEETHER", "BABY EINSTEIN", "Activo", "3.00", "3", "686"], ["Tienda 001", "SEA FLOOR EXPLORERS 2IN1 PLAY GYM", "BABY EINSTEIN", "Activo", "3.00", "2", "2,217"], ["Tienda 001", "COMFY CLEAN BATH TUB", "INGENUITY", "Activo", "4.00", "1", "687"], ["Tienda 001", "ING SYLVI CUDDLE PAL SOOTHER", "INGENUITY", "\"No Cecom\"", "2.00", "1", "486"], ["Tienda 001", "ING FOLDING TRAVEL POTTY", "INGENUITY", "Activo", "2.00", "1", "259"], ["Tienda 001", "PELOTA SUAVE DE STITCH CON SONAJA", "BRIGHT STARTS", "Activo", "4.00", "3", "526"], ["Tienda 001", "BANERA PLEGABLE VERDE DE VIAJE PARA BEBE", "INGENUITY", "Activo", "3.00", "1", "667"]]}};
+const NOMBRES = {suburbia:'Suburbia', sears:'Sears', chedraui:'Chedraui'};
+const PORTALES = {suburbia:'portal de proveedores de Suburbia', sears:'portal de proveedores de Sears', chedraui:'portal de proveedores de Chedraui'};
+let elegido = null, corriendo = false;
+
+const $ = s => document.querySelector(s);
+const fmt = n => new Intl.NumberFormat('es-MX').format(n);
+const mxn = n => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(n);
+const esNum = v => /^-?[\d,]*\.?\d+%?$/.test(String(v).trim());
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+document.querySelectorAll('.cliente').forEach(b => b.addEventListener('click', () => {
+  if (corriendo) return;
+  document.querySelectorAll('.cliente').forEach(x => x.setAttribute('aria-pressed', 'false'));
+  b.setAttribute('aria-pressed', 'true');
+  elegido = b.dataset.id;
+  $('#obtener').disabled = false;
+  $('#hint').textContent = 'Cliente: ' + NOMBRES[elegido];
+}));
+
+const espera = ms => new Promise(r => setTimeout(r, ms));
+
+$('#obtener').addEventListener('click', async () => {
+  if (!elegido || corriendo) return;
+  corriendo = true; $('#obtener').disabled = true;
+  const pasos = [
+    'Conectando con el ' + PORTALES[elegido] + '…',
+    'Buscando el reporte más reciente…',
+    'Descargando archivo…',
+    'Validando columnas y totales…'
+  ];
+  const ol = $('#pasos'); ol.innerHTML = '';
+  $('#proceso').hidden = false; $('#resultado').hidden = true;
+  for (const p of pasos) {
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="ico">…</span><span>' + esc(p) + '</span>';
+    ol.appendChild(li);
+    await espera(550);
+    li.classList.add('hecho'); li.querySelector('.ico').textContent = '✓';
+  }
+  mostrar(elegido);
+  corriendo = false; $('#obtener').disabled = false;
+});
+
+function mostrar(id) {
+  const d = DATOS[id];
+  const c = $('#contenido');
+  $('#resultado').hidden = false;
+  if (!d) {
+    $('#tituloRes').textContent = '3. Sin reporte guardado';
+    c.innerHTML = '<p class="aviso">Aún no hay un reporte guardado para ' + NOMBRES[id] + '. Se agregará en la siguiente actualización.</p>';
+    $('#resultado').scrollIntoView({behavior:'smooth', block:'start'});
+    return;
+  }
+  $('#tituloRes').textContent = '3. Reporte listo · ' + NOMBRES[id];
+  const kpis = [
+    ['Registros', fmt(d.registros)], ['Tiendas', fmt(d.tiendas)], ['Artículos', fmt(d.articulos)],
+    ['Piezas vendidas', fmt(d.piezas)], ['Venta', mxn(d.venta)]
+  ];
+  const numCols = d.columnas.map((_, i) => d.muestra.every(r => r[i] === '' || esNum(r[i])));
+  c.innerHTML =
+    '<div class="kpis">' + kpis.map(k => '<div class="kpi"><b>' + k[1] + '</b><span>' + k[0] + '</span></div>').join('') + '</div>' +
+    '<p class="meta"><b>Archivo:</b> ' + esc(d.archivo) + ' · <b>Formato:</b> ' + esc(d.formato) + ' · <b>Periodo:</b> ' + esc(d.periodo) + '</p>' +
+    '<div class="acciones" style="margin:0 0 14px"><a class="primario" href="' + encodeURIComponent(d.archivo) + '" download="' + esc(id + '_' + d.archivo) + '">Descargar reporte</a>' +
+    '<span class="hint">Vista previa de las primeras ' + d.muestra.length + ' filas</span></div>' +
+    '<div class="tabla"><table><thead><tr>' + d.columnas.map((h, i) => '<th' + (numCols[i] ? ' class="n"' : '') + '>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' +
+    d.muestra.map(r => '<tr>' + r.map((v, i) => '<td' + (numCols[i] ? ' class="n"' : '') + '>' + esc(v) + '</td>').join('') + '</tr>').join('') +
+    '</tbody></table></div>';
+  $('#resultado').scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+</body>
+</html>
